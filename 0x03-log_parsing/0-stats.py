@@ -1,40 +1,42 @@
 #!/usr/bin/python3
-"""Performs log parsing from stdin"""
-
+"""
+This module contains the function that displays the
+stats from the standard input
+"""
 import re
 import sys
-counter = 0
-file_size = 0
-statusC_counter = {200: 0, 301: 0, 400: 0,
-                   401: 0, 403: 0, 404: 0, 405: 0, 500: 0}
+status_codes = {200: 0, 301: 0, 400: 0, 401: 0,
+                403: 0, 404: 0, 405: 0, 500: 0}
+print_counter = 0
+size_summation = 0
 
 
-def printCodes(dict, file_s):
-    """Prints the status code and the number of times they appear"""
-    print("File size: {}".format(file_s))
-    for key in sorted(dict.keys()):
-        if statusC_counter[key] != 0:
-            print("{}: {}".format(key, dict[key]))
+def print_logs():
+    """
+    Prints status codes to the logs
+    """
+    print("File size: {}".format(size_summation))
+    for k, v in sorted(status_codes.items()):
+        if v != 0:
+            print("{}: {}".format(k, v))
 
 
 if __name__ == "__main__":
     try:
         for line in sys.stdin:
-            split_string = re.split('- |"|"| " " ', str(line))
-            statusC_and_file_s = split_string[-1]
-            if counter != 0 and counter % 10 == 0:
-                printCodes(statusC_counter, file_size)
-            counter = counter + 1
+            std_line = line.replace("\n", "")
+            log_list = re.split('- | "|" | " " ', str(std_line))
             try:
-                statusC = int(statusC_and_file_s.split()[0])
-                f_size = int(statusC_and_file_s.split()[1])
-                # print("Status Code {} size {}".format(statusC, f_size))
-                if statusC in statusC_counter:
-                    statusC_counter[statusC] += 1
-                file_size = file_size + f_size
-            except:
+                codes = log_list[-1].split(" ")
+                if int(codes[0]) not in status_codes.keys():
+                    continue
+                status_codes[int(codes[0])] += 1
+                print_counter += 1
+                size_summation += int(codes[1])
+                if print_counter % 10 == 0:
+                    print_logs()
+            except():
                 pass
-        printCodes(statusC_counter, file_size)
+        print_logs()
     except KeyboardInterrupt:
-        printCodes(statusC_counter, file_size)
-        raise
+        print_logs()
